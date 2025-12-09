@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Datos - XML/JSON | Talento Humano ULEAM</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .data-section {
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 5px solid var(--verde-uleam);
+    }
+
+    .format-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .format-btn {
+      padding: 10px 20px;
+      border: 2px solid #ddd;
+      background: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .format-btn.active {
+      background: var(--verde-uleam);
+      color: white;
+      border-color: var(--verde-uleam);
+    }
+
+    .preview-container {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      max-height: 500px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .preview-container pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .import-area {
+      width: 100%;
+      min-height: 200px;
+      padding: 15px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      resize: vertical;
+    }
+
+    .file-upload {
+      border: 2px dashed var(--verde-uleam);
+      padding: 40px;
+      text-align: center;
+      border-radius: 8px;
+      background: #f0f8f4;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .file-upload:hover {
+      background: #e0f2ea;
+      border-color: #0a7d44;
+    }
+
+    .file-upload input[type="file"] {
+      display: none;
+    }
+
+    .stats-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card-small {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid var(--verde-uleam);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .stat-card-small h4 {
+      margin: 0 0 10px 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .stat-card-small .number {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--verde-uleam);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <nav class="nav">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="img/logo_uleam.svg" alt="Logo ULEAM" style="width: 50px; height: 50px;">
+        <h1>Gestión de Datos - XML/JSON - ULEAM</h1>
+      </div>
+      <div class="nav-links">
+        <span id="usuarioInfo"></span>
+        <a href="admin.html" class="btn btn-secondary">📊 Panel Admin</a>
+        <a href="empleados.html" class="btn btn-secondary">👥 Empleados</a>
+        <a href="reportes.html" class="btn btn-secondary">📈 Reportes</a>
+        <button onclick="cerrarSesion()" class="btn btn-danger">🚪 Cerrar Sesión</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- ESTADÍSTICAS -->
+    <div class="card">
+      <h2>📊 Resumen de Datos</h2>
+      <div class="stats-cards" id="statsCards"></div>
+    </div>
+
+    <!-- EXPORTACIÓN -->
+    <div class="card">
+      <h2>📤 Exportar Datos</h2>
+      <p>Exporta toda la información del sistema en formato XML o JSON</p>
+
+      <div class="data-section">
+        <h3>Selecciona el tipo de datos a exportar:</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="exportEmpleados" checked> Empleados
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="exportDepartamentos" checked> Departamentos
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="exportSolicitudes" checked> Solicitudes
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="exportEvaluaciones" checked> Evaluaciones
+            </label>
+          </div>
+        </div>
+
+        <h3>Formato de exportación:</h3>
+        <div class="format-selector">
+          <button class="format-btn active" onclick="seleccionarFormato('json')" id="btnJSON">
+             JSON
+          </button>
+          <button class="format-btn" onclick="seleccionarFormato('xml')" id="btnXML">
+            XML
+          </button>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="generarVistaPrevia()">
+             Vista Previa
+          </button>
+          <button class="btn btn-success" onclick="exportarDatos()">
+            Descargar Archivo
+          </button>
+          <button class="btn btn-info" onclick="copiarAlPortapapeles()">
+              Copiar al Portapapeles
+          </button>
+        </div>
+      </div>
+
+      <div id="previewSection" style="display: none;">
+        <h3>Vista Previa:</h3>
+        <div class="preview-container" id="previewContent"></div>
+      </div>
+    </div>
+
+    <!-- IMPORTACIÓN -->
+    <div class="card">
+      <h2> Importar Datos</h2>
+      <p>Importa datos desde archivos XML o JSON para cargar información al sistema</p>
+
+      <div class="data-section">
+        <h3>Opción 1: Subir archivo</h3>
+        <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+          <input type="file" id="fileInput" accept=".json,.xml" onchange="cargarArchivo(event)">
+          <p style="margin: 0; font-size: 1.2rem;"> Haz clic para seleccionar un archivo</p>
+          <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">Formatos soportados: .json, .xml</p>
+        </div>
+
+        <h3 style="margin-top: 30px;">Opción 2: Pegar contenido</h3>
+        <textarea 
+          class="import-area" 
+          id="importArea" 
+          placeholder="Pega aquí el contenido XML o JSON..."></textarea>
+
+        <div class="action-buttons">
+          <button class="btn btn-success" onclick="importarDatos()">
+             Importar Datos
+          </button>
+          <button class="btn btn-warning" onclick="validarDatos()">
+            ✓ Validar Formato
+          </button>
+          <button class="btn btn-danger" onclick="limpiarImportacion()">
+             Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESPALDO Y RESTAURACIÓN -->
+    <div class="card">
+      <h2> Respaldo y Restauración</h2>
+      <p>Crea copias de seguridad completas o restaura el sistema a un estado anterior</p>
+
+      <div class="data-section">
+        <div class="action-buttons">
+          <button class="btn btn-primary" onclick="crearRespaldoCompleto()">
+             Crear Respaldo Completo (JSON)
+          </button>
+          <button class="btn btn-primary" onclick="crearRespaldoCompletoXML()">
+             Crear Respaldo Completo (XML)
+          </button>
+          <button class="btn btn-warning" onclick="restaurarSistema()">
+             Restaurar desde Respaldo
+          </button>
+          <button class="btn btn-danger" onclick="resetearSistema()">
+             Resetear Sistema (Datos de Prueba)
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/utiles.js"></script>
+  <script src="js/gestion_datos.js"></script>
+</body>
+</html>
